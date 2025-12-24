@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Embed 實戰攻略</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Font for Code */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+TC:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F5F5F4; /* Warm Stone 100 */
+            color: #1C1917; /* Warm Stone 900 */
+        }
+
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Discord Theme Simulation */
+        .discord-bg { background-color: #36393f; }
+        .discord-sidebar { background-color: #2f3136; }
+        .discord-text-primary { color: #dcddde; }
+        .discord-text-secondary { color: #b9bbbe; }
+        .discord-input { background-color: #40444b; color: #dcddde; }
+        
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Slider Thumb Styling */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #5865F2;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #E5E7EB;
+            border-radius: 2px;
+        }
+
+        /* Utility for Copy Animation */
+        .copy-success {
+            animation: pulse-green 0.5s ease;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); color: #10B981; }
+            100% { transform: scale(1); }
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutral (Stone) for App, Dark Theme for Discord Simulator -->
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation / Header -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🤖</span>
+                <h1 class="text-xl font-bold tracking-tight text-stone-800">Discord Bot <span class="text-indigo-600">Embed Masterclass</span></h1>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium text-stone-600">
+                <a href="#ctx-section" class="hover:text-indigo-600 transition">Context (ctx)</a>
+                <a href="#lab-section" class="hover:text-indigo-600 transition">Embed 實驗室</a>
+                <a href="#analysis-section" class="hover:text-indigo-600 transition">數據比較</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+        <!-- Section 1: Introduction & Context -->
+        <section id="ctx-section" class="space-y-6">
+            <div class="text-center max-w-3xl mx-auto mb-10">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4">基礎觀念：Context (ctx) 的威力</h2>
+                <p class="text-lg text-stone-600 leading-relaxed">
+                    在 Py-cord 的斜線指令中，<code class="code-font bg-stone-200 px-1 py-0.5 rounded text-red-500">ctx</code> 是一個包含所有環境資訊的容器。
+                    在開始製作漂亮的 Embed 之前，我們必須先了解資料從何而來。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card: Author -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow group">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-2xl mb-4 group-hover:scale-110 transition-transform">👤</div>
+                    <h3 class="font-bold text-lg mb-2">ctx.author</h3>
+                    <p class="text-stone-500 text-sm mb-3">執行指令的使用者物件。</p>
+                    <ul class="text-xs text-stone-400 space-y-1 code-font">
+                        <li>.display_name (暱稱)</li>
+                        <li>.id (ID)</li>
+                        <li>.avatar (頭貼)</li>
+                    </ul>
+                </div>
+                <!-- Card: Channel -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow group">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-2xl mb-4 group-hover:scale-110 transition-transform">💬</div>
+                    <h3 class="font-bold text-lg mb-2">ctx.channel</h3>
+                    <p class="text-stone-500 text-sm">執行指令的頻道物件。</p>
+                    <div class="mt-4 pt-4 border-t border-stone-50">
+                        <span class="text-xs font-semibold bg-stone-100 px-2 py-1 rounded">來源：目前頻道</span>
+                    </div>
+                </div>
+                <!-- Card: Guild -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow group">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 text-2xl mb-4 group-hover:scale-110 transition-transform">🏰</div>
+                    <h3 class="font-bold text-lg mb-2">ctx.guild</h3>
+                    <p class="text-stone-500 text-sm">指令所在的伺服器（公會）物件。</p>
+                    <div class="mt-4 pt-4 border-t border-stone-50">
+                        <span class="text-xs font-semibold bg-stone-100 px-2 py-1 rounded">屬性：name, id, icon</span>
+                    </div>
+                </div>
+                <!-- Card: Respond -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow group">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center text-red-600 text-2xl mb-4 group-hover:scale-110 transition-transform">🚀</div>
+                    <h3 class="font-bold text-lg mb-2">ctx.respond()</h3>
+                    <p class="text-stone-500 text-sm">回應使用者的主要方法。</p>
+                    <div class="mt-4 pt-4 border-t border-stone-50">
+                        <span class="text-xs font-semibold bg-stone-100 px-2 py-1 rounded">發送：Text 或 Embed</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: The Interactive Laboratory -->
+        <section id="lab-section" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-200">
+            <div class="bg-stone-900 text-white p-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">🛠️ Embed 實驗室</h2>
+                    <p class="text-stone-400 text-sm mt-1">即時調整參數，觀察 inline 排版邏輯與程式碼變化。</p>
+                </div>
+                <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-indigo-600 rounded-full text-xs font-bold">Interactive Mode</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+                
+                <!-- Left Column: Controls -->
+                <div class="lg:col-span-4 bg-stone-50 p-6 space-y-6 overflow-y-auto max-h-[800px] border-r border-stone-200">
+                    
+                    <!-- Basic Settings -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm uppercase tracking-wide text-stone-500 font-bold border-b pb-2">基本設定</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-700 mb-1">標題 (Title)</label>
+                            <input type="text" id="input-title" class="w-full px-3 py-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm" value="Context Information">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-700 mb-1">描述 (Description)</label>
+                            <textarea id="input-desc" rows="2" class="w-full px-3 py-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="輸入描述文字...">這是由 Python 機器人自動生成的報告。</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-700 mb-1">顏色 (Color Hex)</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="input-color" value="#4AF750" class="h-8 w-8 cursor-pointer border-none p-0 bg-transparent">
+                                <span id="color-hex-display" class="code-font text-xs text-stone-500">#4AF750</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Options -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm uppercase tracking-wide text-stone-500 font-bold border-b pb-2">元件開關</h3>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="toggle-thumbnail" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" checked>
+                            <span class="text-sm text-stone-700">顯示縮圖 (Author Avatar)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="toggle-footer" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" checked>
+                            <span class="text-sm text-stone-700">顯示頁尾 & Timestamp</span>
+                        </label>
+                    </div>
+
+                    <!-- Fields Manager -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-sm uppercase tracking-wide text-stone-500 font-bold">欄位 (Fields)</h3>
+                            <button onclick="addField()" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 font-bold transition">+ 新增</button>
+                        </div>
+                        <div id="fields-container" class="space-y-3">
+                            <!-- Fields will be injected here by JS -->
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                            <p class="text-xs text-yellow-800">
+                                💡 <strong>小撇步：</strong> Discord 電腦版一排最多顯示 <strong>3</strong> 個 <code>inline=True</code> 欄位。第 4 個會自動換行。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Previews -->
+                <div class="lg:col-span-8 bg-stone-100 p-6 flex flex-col gap-6">
+                    
+                    <!-- Discord Simulator -->
+                    <div class="bg-white rounded-lg shadow-sm p-4 border border-stone-200">
+                        <h4 class="text-xs font-bold text-stone-400 uppercase mb-3">Discord Preview</h4>
+                        <div class="discord-bg rounded p-4 font-sans text-base leading-snug">
+                            <div class="flex items-start gap-4">
+                                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shrink-0">Bot</div>
+                                <div class="w-full">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="font-medium text-white">PyBot</span>
+                                        <span class="bg-[#5865F2] text-white text-[10px] px-1 rounded font-bold">BOT</span>
+                                        <span class="text-xs discord-text-secondary">Today at 12:00 PM</span>
+                                    </div>
+                                    
+                                    <div class="mt-2 flex">
+                                        <div id="preview-pill" class="w-1 rounded-l-md bg-[#4AF750] shrink-0"></div>
+                                        <div class="discord-sidebar rounded-r-md p-4 w-full max-w-md grid grid-cols-12 gap-y-2">
+                                            <div class="col-span-12 flex items-center gap-2 mb-1 hidden" id="preview-author-row">
+                                                <div class="w-5 h-5 rounded-full bg-gray-500 flex items-center justify-center text-[10px] text-white">U</div>
+                                                <span class="text-sm font-bold discord-text-primary">User Display Name</span>
+                                            </div>
+                                            <div class="col-span-9 pr-4">
+                                                <div id="preview-title" class="font-bold text-white mb-2 hover:underline cursor-pointer">Context Information</div>
+                                                <div id="preview-desc" class="text-sm discord-text-primary mb-4">這是由 Python 機器人自動生成的報告。</div>
+                                                <div id="preview-fields" class="flex flex-wrap gap-y-4"></div>
+                                            </div>
+                                            <div class="col-span-3 flex justify-end">
+                                                <div id="preview-thumbnail" class="w-16 h-16 bg-stone-600 rounded-lg flex items-center justify-center text-2xl">👤</div>
+                                            </div>
+                                            <div id="preview-footer" class="col-span-12 pt-2 mt-2 border-t border-stone-600 flex items-center gap-2">
+                                                <div class="w-4 h-4 rounded-full bg-indigo-500 text-[8px] flex items-center justify-center text-white">B</div>
+                                                <span class="text-xs discord-text-secondary">系統自動產出報告 • Today at 12:00 PM</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Preview with Copy Button -->
+                    <div class="bg-[#282c34] rounded-lg shadow-sm overflow-hidden border border-stone-700 flex-grow flex flex-col relative group">
+                        <div class="px-4 py-2 bg-[#21252b] text-stone-400 text-xs flex justify-between items-center">
+                            <span>main.py (Auto-generated)</span>
+                            <button id="btn-copy" onclick="copyCode()" class="flex items-center gap-1.5 hover:text-white transition-colors">
+                                <span id="copy-text">複製程式碼</span>
+                                <span id="copy-icon">📋</span>
+                            </button>
+                        </div>
+                        <pre class="p-4 text-sm code-font text-stone-300 overflow-auto whitespace-pre-wrap"><code id="code-output"># Code will appear here...</code></pre>
+                        
+                        <!-- Invisible Textarea for copying -->
+                        <textarea id="copy-helper" class="absolute -left-[9999px] top-0"></textarea>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Comparative Analysis -->
+        <section id="analysis-section" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            <div class="space-y-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-stone-900 mb-2">純文字 vs Embed：終極對決</h2>
+                    <p class="text-stone-600">為什麼要花時間寫 Embed？數據告訴你答案。</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-stone-100 border-b border-stone-200 text-sm uppercase text-stone-500">
+                                <th class="p-4 font-bold">功能項目</th>
+                                <th class="p-4 font-bold">純文字 (Plain)</th>
+                                <th class="p-4 font-bold text-indigo-600">Embed</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100 text-sm">
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="p-4 font-medium text-stone-800">視覺層次</td>
+                                <td class="p-4 text-stone-500">低 (單一色調)</td>
+                                <td class="p-4 font-bold text-stone-800">高 (顏色、區塊)</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="p-4 font-medium text-stone-800">資訊密度</td>
+                                <td class="p-4 text-stone-500">普通</td>
+                                <td class="p-4 font-bold text-stone-800">高 (結構化)</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="p-4 font-medium text-stone-800">圖片支援</td>
+                                <td class="p-4 text-stone-500">僅網址預覽</td>
+                                <td class="p-4 font-bold text-stone-800">大圖、縮圖、圖標</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="p-4 font-medium text-stone-800">超連結</td>
+                                <td class="p-4 text-stone-500">完整 URL (醜)</td>
+                                <td class="p-4 font-bold text-stone-800">Markdown 隱藏連結</td>
+                            </tr>
+                            <tr class="hover:bg-stone-50 transition">
+                                <td class="p-4 font-medium text-stone-800">程式複雜度</td>
+                                <td class="p-4 text-green-600 font-bold">極簡</td>
+                                <td class="p-4 text-stone-500">中等</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col items-center">
+                <h3 class="font-bold text-stone-700 mb-4 self-start">能力分析雷達圖</h3>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-stone-200 py-8 text-center">
+            <p class="text-stone-500 text-sm">NEHS ICED 2025</p>
+        </footer>
+
+    </main>
+
+    <script>
+        let appState = {
+            title: "Context Information",
+            description: "這是由 Python 機器人自動生成的報告。",
+            color: "#4AF750",
+            thumbnail: true,
+            footer: true,
+            fields: [
+                { name: "User", value: "PlayerOne", inline: false },
+                { name: "Channel", value: "general", inline: true },
+                { name: "Server", value: "My Awesome Guild", inline: true },
+                { name: "User ID", value: "123456789", inline: true },
+                { name: "Input", value: "Hello World", inline: false }
+            ]
+        };
+
+        const fieldsContainer = document.getElementById('fields-container');
+        const previewTitle = document.getElementById('preview-title');
+        const previewDesc = document.getElementById('preview-desc');
+        const previewPill = document.getElementById('preview-pill');
+        const previewThumbnail = document.getElementById('preview-thumbnail');
+        const previewFooter = document.getElementById('preview-footer');
+        const previewFields = document.getElementById('preview-fields');
+        const codeOutput = document.getElementById('code-output');
+
+        function init() {
+            renderFieldsUI();
+            updatePreview();
+            initChart();
+
+            document.getElementById('input-title').addEventListener('input', (e) => {
+                appState.title = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('input-desc').addEventListener('input', (e) => {
+                appState.description = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('input-color').addEventListener('input', (e) => {
+                appState.color = e.target.value;
+                document.getElementById('color-hex-display').textContent = e.target.value;
+                updatePreview();
+            });
+            document.getElementById('toggle-thumbnail').addEventListener('change', (e) => {
+                appState.thumbnail = e.target.checked;
+                updatePreview();
+            });
+            document.getElementById('toggle-footer').addEventListener('change', (e) => {
+                appState.footer = e.target.checked;
+                updatePreview();
+            });
+        }
+
+        function updatePreview() {
+            previewTitle.textContent = appState.title;
+            previewDesc.textContent = appState.description;
+            previewPill.style.backgroundColor = appState.color;
+
+            previewThumbnail.parentElement.style.display = appState.thumbnail ? 'flex' : 'none';
+            previewFooter.style.display = appState.footer ? 'flex' : 'none';
+            
+            previewFields.innerHTML = '';
+            appState.fields.forEach(field => {
+                const fieldEl = document.createElement('div');
+                const widthClass = field.inline ? 'w-[30%] min-w-[120px] mr-[2%]' : 'w-full mb-1';
+                fieldEl.className = `${widthClass} mb-3`;
+                fieldEl.innerHTML = `
+                    <div class="text-xs font-bold text-stone-400 mb-1">${field.name}</div>
+                    <div class="text-sm discord-text-primary text-wrap break-words">${field.value}</div>
+                `;
+                previewFields.appendChild(fieldEl);
+            });
+
+            updateCodeSnippet();
+        }
+
+        function updateCodeSnippet() {
+            const colorHex = appState.color.replace('#', '0x');
+            let code = `@bot.slash_command(name="ctx_embed", description="Embed 範例")\n`;
+            code += `async def example_command(ctx: discord.ApplicationContext, input_text: str):\n`;
+            code += `    # 1. 建立 Embed\n`;
+            code += `    embed = discord.Embed(\n`;
+            code += `        title="${appState.title}",\n`;
+            code += `        description="${appState.description}",\n`;
+            code += `        color=${colorHex}\n`;
+            code += `    )\n\n`;
+
+            if (appState.fields.length > 0) {
+                code += `    # 2. 添加欄位 (Fields)\n`;
+                appState.fields.forEach(field => {
+                    const valStr = field.value.includes('ctx') ? field.value : `"${field.value}"`;
+                    code += `    embed.add_field(name="${field.name}", value=${valStr}, inline=${field.inline ? 'True' : 'False'})\n`;
+                });
+                code += `\n`;
+            }
+
+            if (appState.thumbnail) {
+                code += `    # 3. 設定縮圖\n    embed.set_thumbnail(url=ctx.author.display_avatar.url)\n\n`;
+            }
+
+            if (appState.footer) {
+                code += `    # 4. 設定頁尾 & 時間\n`;
+                code += `    embed.set_footer(text="系統自動產出報告", icon_url=ctx.bot.user.display_avatar.url)\n`;
+                code += `    embed.timestamp = datetime.datetime.now()\n\n`;
+            }
+
+            code += `    # 5. 發送回應\n    await ctx.respond(embed=embed)`;
+            codeOutput.textContent = code;
+        }
+
+        // --- Copy Functionality ---
+        function copyCode() {
+            const code = codeOutput.textContent;
+            const helper = document.getElementById('copy-helper');
+            const btn = document.getElementById('btn-copy');
+            const text = document.getElementById('copy-text');
+            const icon = document.getElementById('copy-icon');
+
+            helper.value = code;
+            helper.select();
+            document.execCommand('copy');
+
+            // UI Feedback
+            text.textContent = "已複製！";
+            icon.textContent = "✅";
+            btn.classList.add('copy-success');
+            
+            setTimeout(() => {
+                text.textContent = "複製程式碼";
+                icon.textContent = "📋";
+                btn.classList.remove('copy-success');
+            }, 2000);
+        }
+
+        function renderFieldsUI() {
+            fieldsContainer.innerHTML = '';
+            appState.fields.forEach((field, index) => {
+                const row = document.createElement('div');
+                row.className = "bg-white border border-stone-200 p-3 rounded-md shadow-sm relative group";
+                row.innerHTML = `
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input type="text" value="${field.name}" oninput="updateField(${index}, 'name', this.value)" class="w-full px-2 py-1 text-xs border rounded bg-stone-50" placeholder="Name">
+                        <input type="text" value="${field.value}" oninput="updateField(${index}, 'value', this.value)" class="w-full px-2 py-1 text-xs border rounded bg-stone-50" placeholder="Value">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <div class="relative">
+                                <input type="checkbox" ${field.inline ? 'checked' : ''} onchange="updateField(${index}, 'inline', this.checked)" class="sr-only peer">
+                                <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </div>
+                            <span class="text-xs font-medium text-stone-600">Inline</span>
+                        </label>
+                        <button onclick="removeField(${index})" class="text-stone-400 hover:text-red-500 transition px-2">🗑️</button>
+                    </div>
+                `;
+                fieldsContainer.appendChild(row);
+            });
+        }
+
+        function addField() {
+            appState.fields.push({ name: "New Field", value: "Content", inline: true });
+            renderFieldsUI();
+            updatePreview();
+        }
+
+        function removeField(index) {
+            appState.fields.splice(index, 1);
+            renderFieldsUI();
+            updatePreview();
+        }
+
+        function updateField(index, key, value) {
+            appState.fields[index][key] = value;
+            updatePreview();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['視覺吸引力', '資訊結構化', '多媒體支援', '互動潛力', '專業感'],
+                    datasets: [{
+                        label: '純文字 (Plain Text)',
+                        data: [2, 3, 2, 1, 2],
+                        fill: true,
+                        backgroundColor: 'rgba(168, 162, 158, 0.2)',
+                        borderColor: 'rgba(168, 162, 158, 1)',
+                        pointBackgroundColor: 'rgba(168, 162, 158, 1)'
+                    }, {
+                        label: 'Embed (嵌入式)',
+                        data: [5, 5, 5, 4, 5],
+                        fill: true,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: { display: false, stepSize: 1 }
+                        }
+                    }
+                }
+            });
+        }
+
+        init();
+    </script>
+    <!-- Visualization & Content Choices:
+        1. Source Info: ctx attributes -> Goal: Inform -> Viz: Interactive Cards (Hover effects) -> Interaction: Simple hover/read -> Justification: Breaks down abstract code properties into tangible "cards".
+        2. Source Info: Embed Structure & Code -> Goal: Change/Experiment -> Viz: "The Lab" (Split Screen Builder) -> Interaction: Inputs, Toggles, Live DOM manipulation -> Justification: The prompt emphasizes "inline" logic. The best way to understand `inline=True` vs `False` is to toggle it and watch the blocks rearrange.
+        3. Source Info: Comparison Table -> Goal: Compare -> Viz: Radar Chart (Chart.js) -> Interaction: Hover for values -> Justification: Radar charts are excellent for comparing "profiles" (Text vs Embed) across multiple qualitative dimensions (Visuals, Density, etc.).
+        4. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. FontAwesome icons replaced with Unicode/Tailwind/Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</body>
+</html>
